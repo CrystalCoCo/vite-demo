@@ -1,22 +1,52 @@
 import axios from 'axios'
+import store from '../store/index'
+import { errorPrompt } from './errorPrompt'
+import { getCookie } from './commonFunction'
 
-async function request(url, options) {
-  // 创建 axios 实例
-  const service = axios.create({
-    baseURL: "", // api base_url
-    timeout: 6000 // 请求超时时间
-  })
-  // 请求拦截
-  service.interceptors.request.use(config => {
-    // 这里可设置请求头等信息
-    if (options && options.body) config.data = options.body
-    return config
-  });
-  // 返回拦截
-  service.interceptors.response.use(response => {
-    // 这里可进行返回数据的格式化等操作
-    return response.data
-  })
-  return service(url, options)
+const instance = axios.create({
+  baseURL: import.meta.env.VITE_APP_BASEURL, 
+  timeout: 30000, // 请求超时时间
+  showLoading: true
+})
+
+let loadingNum = 0
+instance.interceptors.request.use(config => {
+  if(config.showLoading != false) {
+    loadingNum ++
+    store.commit('loading', true)
+  }  
+  if(getCookie('user')) config.headers.Authorization = getCookie('user')  
+  return config
+}, error => Promise.reject(error))
+
+instance.interceptors.response.use(response => {
+  loadingNum --
+  if(loadingNum <= 0) store.commit('loading', false)
+  if(response.data.code === '0000') return response.data
+  else {
+    errorPrompt(response.data)
+    return Promise.reject(response)
+  }
+}, error => {
+  loadingNum--
+  if(loadingNum <= 0) store.commit('loading', false)
+  errorPrompt(error.response)
+  return Promise.reject(error.response)
+})
+
+export function get(url, data) {
+  return instance.get(url, { params: data })
 }
-export default request
+export function post(url, data, params) {
+  return instance.post(url, data, { params: params })
+}  
+export function deleteReq(url, data) {
+  return instance.delete(url, { params: data })
+}  
+export function put(url, data, params) {
+  return instance.put(url, data, { params: params })
+}
+
+
+
+
