@@ -11,11 +11,11 @@ const instance = axios.create({
 
 let loadingNum = 0
 instance.interceptors.request.use(config => {
-  if(config.showLoading != false) {
+  if(config.showLoading != 'false') {
     loadingNum ++
     store.commit('loading', true)
   }  
-  if(getCookie('user')) config.headers.Authorization = getCookie('user')  
+  if(getCookie('ZhongTai')) config.headers.Authorization = getCookie('ZhongTai')  
   return config
 }, error => Promise.reject(error))
 
@@ -34,8 +34,9 @@ instance.interceptors.response.use(response => {
   return Promise.reject(error.response)
 })
 
-export function get(url, data) {
-  return instance.get(url, { params: data })
+export function get(url, data, loading) {
+  let params = loading == false ? { params: data, showLoading: loading } : { params: data }
+  return instance.get(url, params)
 }
 export function post(url, data, params) {
   return instance.post(url, data, { params: params })

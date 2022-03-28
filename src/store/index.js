@@ -1,16 +1,16 @@
 import { createStore } from 'vuex'
+import user from "./user"
 
-
-const store = createStore({
-  state () {
-    return {
-      count: 0
-    }
+export default createStore({
+  state: {
+    spinning: true
   },
   mutations: {
-    increment (state) {
-      state.count++
+    loading(state, status) {
+      state.spinning = status
     }
+  },
+  modules: {
+    user
   }
 })
-export default store;
